@@ -71,3 +71,20 @@ it.effect.each(["t3code", "T3 Code (Alpha)"])(
       );
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
 );
+
+// A fork and the official app can run side by side without locking each other's databases.
+it.effect.each([false, true])(
+  "isolates the personal macOS profile (development=%s)",
+  (isDevelopment) =>
+    Effect.gen(function* () {
+      const result = yield* resolveUserDataPath({
+        appDataDirectory: "/profiles",
+        isDevelopment,
+        platform: "darwin",
+      });
+      assert.equal(result, `/profiles/t3code-personal${isDevelopment ? "-dev" : ""}`);
+    }).pipe(
+      Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({})),
+      Effect.provide(NodeServices.layer),
+    ),
+);
